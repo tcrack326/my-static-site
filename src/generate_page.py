@@ -1,6 +1,5 @@
 from mdtohtmlnode import markdown_to_html_node
 from extracttitle import extract_title
-from copytopublic import copy_static_to_public
 import os
 
 def create_directories(path):
@@ -16,7 +15,7 @@ def create_directories(path):
 
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath='/'):
     print(f" Generating page from {from_path} to {dest_path} using {template_path}")
     
     from_md_file = None 
@@ -31,23 +30,25 @@ def generate_page(from_path, template_path, dest_path):
     title = extract_title(from_md_file)
     template_file = template_file.replace("{{ Title }}", title)
     template_file = template_file.replace("{{ Content }}", html_string)
+    template_file = template_file.replace('href="/', f'href="{basepath}')
+    template_file = template_file.replace('src="/', f'href="{basepath}')
     #print(f"DEBUG: WHAT IS TEMPLATE FILE: {template_file}")
     print(f"DEBUG: THE DEST_PATH: {dest_path}")
     with open(dest_path, "w+") as f:
         f.write(template_file)
     
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     contents = os.listdir(dir_path_content)
     for content in contents:
         full_path = f"{dir_path_content}/{content}"
         if os.path.isfile(full_path):
             print(f"DEBUG: content is file, calling generate_Page with {full_path}")
             dest_path = f"{dest_dir_path}/{content.replace('md', 'html')}"
-            generate_page(full_path, template_path, dest_path)
+            generate_page(full_path, template_path, dest_path, basepath)
         else:
             new_path = f"{dest_dir_path}/{content}"
             print(f"DEBUG: content is directory, calling recursive with {full_path}")
             print(f"DEBUG: THE DEST PATH: {new_path}")
             os.makedirs(new_path, exist_ok=True)
-            generate_pages_recursive(full_path, template_path, new_path)
+            generate_pages_recursive(full_path, template_path, new_path, basepath)
             
